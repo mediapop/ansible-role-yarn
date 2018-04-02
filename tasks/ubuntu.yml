@@ -1,25 +1,50 @@
 ---
-- name: Check if YARN repo is already configured.
-  stat: path={{ yarn_debian_repofile_path }}
-  register: yarn_repofile_result
 
-- name: Import YARN APT key.
+
+- name: "Check Yarn sources list file exists"
+  file:
+    path: /etc/apt/sources.list.d/yarn.list
+    owner: root
+    mode: 0644
+    state: touch
+
+- name: "Yarn | GPG"
   apt_key:
     url: "{{ yarn_debian_repo_gpg_key_url }}"
     state: present
-  register: result
-  until: '"failed" not in result'
-  retries: 3
-  delay: 5
-  when: not yarn_repofile_result.stat.exists
 
-- name: Install YARN APT repo.
-  apt_repository:
-    repo: "deb {{ yarn_debian_repo_url }}"
-    filename: "yarn"
+- name: "Yarn | Ensure Debian package is in sources list"
+  lineinfile:
+    dest: /etc/apt/sources.list.d/yarn.list
+    regexp: "deb {{ yarn_debian_repo_url }}"
+    line: "deb {{ yarn_debian_repo_url }}"
     state: present
-  register: result
-  until: '"failed" not in result'
-  retries: 3
-  delay: 5
-  when: not yarn_repofile_result.stat.exists
+
+- name: "Yarn | Update APT cache"
+  apt:
+    update_cache: yes
+
+# - name: Check if YARN repo is already configured.
+#   stat: path={{ yarn_debian_repofile_path }}
+#   register: yarn_repofile_result
+
+# - name: Import YARN APT key.
+#   apt_key:
+#     url: "{{ yarn_debian_repo_gpg_key_url }}"
+#     state: present
+#   register: result
+#   until: '"failed" not in result'
+#   retries: 3
+#   delay: 5
+#   when: not yarn_repofile_result.stat.exists
+
+# - name: Install YARN APT repo.
+#   apt_repository:
+#     repo: "deb {{ yarn_debian_repo_url }}"
+#     filename: "yarn"
+#     state: present
+#   register: result
+#   until: '"failed" not in result'
+#   retries: 3
+#   delay: 5
+#   when: not yarn_repofile_result.stat.exists
